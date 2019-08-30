@@ -55,8 +55,6 @@ void *Child_Main(void *ptr)
         }
         pthread_mutex_unlock(&ch_ready_lock);
     }
-    
-    exit(-1);
 }
 
 int main()
