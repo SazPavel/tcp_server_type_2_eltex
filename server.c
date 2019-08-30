@@ -28,7 +28,6 @@ void SigintHandler(int sig)
     }
     pthread_mutex_destroy(&ch_ready_lock);
     printf("Server out\n");
-    close(sock);
     exit(0);
 }
 
