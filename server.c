@@ -52,9 +52,11 @@ void *Child_Main(void *ptr)
             send(sock, buf2, sizeof(buf2), 0);
             pthread_mutex_lock(&ch_ready_lock);
             ch_ready[*num] = 1;
+            close(sock);
         }
         pthread_mutex_unlock(&ch_ready_lock);
     }
+    printf("Thread %d close\n", *num);
 }
 
 int main()
