@@ -9,7 +9,7 @@
 #define SIZE 6
 
 pthread_mutex_t ch_ready_lock = PTHREAD_MUTEX_INITIALIZER;
-int cycle = 1, ch_ready[SIZE];
+int cycle = 1, sock, ch_ready[SIZE];
 pthread_t tid[SIZE];
 pthread_cond_t cond[SIZE];
 
@@ -28,13 +28,14 @@ void SigintHandler(int sig)
     }
     pthread_mutex_destroy(&ch_ready_lock);
     printf("Server out\n");
+    close(sock);
     exit(0);
 }
 
 void *Child_Main(void *ptr)
 {
     int *num = (int*)ptr;
-    int sock, bytes_read;
+    int csock, bytes_read;
     char buf[16];
     char buf2[] = "priv\n";
     printf("Thread %d ready\n", *num);
@@ -45,14 +46,14 @@ void *Child_Main(void *ptr)
         pthread_cond_wait(&cond[*num], &ch_ready_lock);
         if(ch_ready[*num] != 1)
         {
-            sock = ch_ready[*num];
+            csock = ch_ready[*num];
             pthread_mutex_unlock(&ch_ready_lock);
-            bytes_read = recv(sock, buf, 16, 0);
+            bytes_read = recv(csock, buf, 16, 0);
             printf("thread %d %s\n", *num, buf);
-            send(sock, buf2, sizeof(buf2), 0);
+            send(csock, buf2, sizeof(buf2), 0);
             pthread_mutex_lock(&ch_ready_lock);
             ch_ready[*num] = 1;
-            close(sock);
+            close(csock);
         }
         pthread_mutex_unlock(&ch_ready_lock);
     }
@@ -68,7 +69,7 @@ int main()
     sigaddset(&sigint.sa_mask, SIGINT);
     sigaction(SIGINT, &sigint, 0);
     
-    int sock, child_sock, i, ch_num = 0;
+    int child_sock, i, ch_num = 0;
     socklen_t size = 1;
     int num[SIZE];
     struct sockaddr_in addr, child;
@@ -110,6 +111,5 @@ int main()
         pthread_mutex_unlock(&ch_ready_lock);
     }
     
-    close(sock);
     exit(0);
 }
